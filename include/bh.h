@@ -1,0 +1,30 @@
+#pragma once
+#include "maths.h"
+
+
+struct Camera {
+    struct Vec3 loc;
+    struct Vec3 rot;
+    struct Vec3 dir;
+};
+
+struct Scene {
+    const char* name;
+    int width;
+    int height;
+    unsigned char *image; //file name to save render at
+    const char *file; //file name to save render at
+    int obj_num;
+    int obj_cap;
+    struct Triangle* objects;
+    struct Camera camera; // camera is like its own object in the scene
+};
+
+
+// Functions
+
+void write_render(struct Scene* scn);
+void render(struct Scene* scn);
+void scene_add_tri(struct Scene*, struct Triangle);
+struct Scene mk_scene(const char* name, unsigned int width, unsigned int height, const char* file, unsigned int obj_capacity);
+struct Camera mk_camera(struct Vec3 location, int focal_length);
