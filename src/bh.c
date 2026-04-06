@@ -46,18 +46,32 @@ struct Scene mk_scene(const char* name, unsigned int width, unsigned int height,
 
 struct Camera mk_camera(struct Vec3 location, int focal_length) {
     struct Camera cam;
-    cam.loc = Vec3(0, 0, 0);
-    cam.dir = Vec3(0, 0, 1.0);
+    cam.loc             = Vec3(0, 0, 0);
+    cam.dir             = Vec3(0, 0, 1.0);
+    cam.rot             = Vec3(0, 0, 0);
+    cam.focal_length    = 10;
     return cam;
 }
 
 void render(struct Scene* scn) {
     for (int y=0;y<scn->height;y++) {
         for (int x=0;x<scn->width;x++) {
+            struct Vec3 ray = Vec3(x-((float)x/2.0), (y-(float)y/2.0), scn->camera.focal_length);
+            struct Vec3 color = Vec3(130, 70, 50);
+            camera_write_pixel(scn, x, y, color);
+            /*
             int i = ((y * scn->width) + x) * 3;
             scn->image[i]        = 70; // R
             scn->image[i + 1]    = 150; // G
             scn->image[i + 2]    = 30; // B
+            */
         }
     }
+}
+
+void camera_write_pixel(struct Scene* scn, int x, int y, struct Vec3 color) {
+    int i = ((y * scn->width) + x) * 3;
+    scn->image[i]        = color.x; // R
+    scn->image[i + 1]    = color.y; // G
+    scn->image[i + 2]    = color.z; // B
 }
