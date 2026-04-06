@@ -1,10 +1,23 @@
 #include <math.h>
+#include <stdio.h>
+#include <threads.h>
 #include "maths.h"
 
 
 
 float sqr(float num) {
     return num * num;
+}
+
+char zero(float num) {
+    if ((num < 0.0001f) && (num > -0.0001f))
+        return 1;
+    else
+     return 0;
+}
+// normalise the float number to be from 0.0 - 1.0
+float norm_float(float max, float value) { 
+    return value / max;
 }
 
 struct Vec3 Vec3(float x, float y, float z) {
@@ -15,32 +28,36 @@ struct Vec3 Vec3(float x, float y, float z) {
     return vector;
 }
 
-struct Vec3 Vec3_sub(struct Vec3 vector1, struct Vec3 vector2) {
-    vector1.x = vector2.x - vector1.x;
-    vector1.y = vector2.y - vector1.y;
-    vector1.z= vector2.z - vector1.z;
-    return vector1;
+struct Vec3 Vec3_add(struct Vec3 vector1, struct Vec3 vector2) {
+    vector1.x = vector1.x + vector2.x; vector1.y = vector1.y + vector2.y; vector1.z = vector1.z + vector2.z; return vector1;
 }
 
-struct Vec3 Vec3_add(struct Vec3 vector1, struct Vec3 vector2) {
-    vector1.x = vector2.x + vector1.x;
-    vector1.y = vector2.y + vector1.y;
-    vector1.z= vector2.z + vector1.z;
-    return vector1;
+struct Vec3 Vec3_sub(struct Vec3 vector1, struct Vec3 vector2) {
+    vector1.x = vector1.x - vector2.x; vector1.y = vector1.y - vector2.y; vector1.z = vector1.z - vector2.z; return vector1;
 }
 
 struct Vec3 Vec3_mul(struct Vec3 vector1, struct Vec3 vector2) {
-    vector1.x = vector2.x * vector1.x;
-    vector1.y = vector2.y * vector1.y;
-    vector1.z= vector2.z * vector1.z;
-    return vector1;
+    vector1.x = vector2.x * vector1.x; vector1.y = vector2.y * vector1.y; vector1.z = vector2.z * vector1.z; return vector1;
 }
 
 struct Vec3 Vec3_div(struct Vec3 vector1, struct Vec3 vector2) {
-    vector1.x = vector2.x / vector1.x;
-    vector1.y = vector2.y / vector1.y;
-    vector1.z= vector2.z / vector1.z;
-    return vector1;
+    vector1.x = vector1.x / vector2.x; vector1.y = vector1.y / vector2.y; vector1.z = vector1.z / vector2.z; return vector1;
+}
+
+struct Vec3 Vec3_float_add(struct Vec3 vector, float num) {
+    vector.x = vector.x + num; vector.y = vector.y + num; vector.z = vector.z + num; return vector;
+}
+
+struct Vec3 Vec3_float_sub(struct Vec3 vector, float num) {
+    vector.x = vector.x - num; vector.y = vector.y - num; vector.z = vector.z - num; return vector;
+}
+
+struct Vec3 Vec3_float_mul(struct Vec3 vector, float num) {
+    vector.x = vector.x * num; vector.y = vector.y * num; vector.z = vector.z * num; return vector;
+}
+
+struct Vec3 Vec3_float_div(struct Vec3 vector, float num) {
+    vector.x = vector.x / num; vector.y = vector.y / num; vector.z = vector.z / num; return vector;
 }
 
 struct Vec3 cross_product(struct Vec3 vec1, struct Vec3 vec2) {
@@ -52,7 +69,9 @@ struct Vec3 cross_product(struct Vec3 vec1, struct Vec3 vec2) {
 }
 
 float dot_product(struct Vec3 vec1, struct Vec3 vec2) {
-    return ((vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z));
+    float val = ((vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z));
+    //printf("-- %f\n", val); //test
+    return val;
 }
 
 float length(struct Vec3 vector) {
@@ -82,6 +101,38 @@ struct Triangle mk_triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c) {
     triangle.a = a;
     triangle.b = b;
     triangle.c = c;
-    triangle.normal = normalize(cross_product(Vec3_sub(b, a), Vec3_sub(c, a)));
+    triangle.normal = cross_product(Vec3_sub(b, a), Vec3_sub(c, a));
     return triangle;
+}
+
+char tri_ray_collision(struct Triangle tri, struct Vec3 ray, struct Vec3 cam_loc) {
+    float n_dot_t = dot_product(tri.normal, ray);
+    if (zero(n_dot_t)) {
+        return 0;
+    }
+    float n_dot_ps = dot_product(tri.normal, Vec3_sub(tri.a, cam_loc));
+    float t = n_dot_ps / n_dot_t;
+    struct Vec3 planePoint = Vec3_add(cam_loc, Vec3_float_mul(ray, t));
+    
+    struct Vec3 A2B = Vec3_sub(tri.b, tri.a);
+    struct Vec3 B2C = Vec3_sub(tri.c, tri.b);
+    struct Vec3 C2A = Vec3_sub(tri.a, tri.c);
+
+    struct Vec3 A2P = Vec3_sub(planePoint, tri.a);
+    struct Vec3 B2P = Vec3_sub(planePoint, tri.b);
+    struct Vec3 C2P = Vec3_sub(planePoint, tri.c);
+    
+    struct Vec3 A2T = cross_product(A2B, A2P);
+    struct Vec3 B2T = cross_product(B2C, B2P);
+    struct Vec3 C2T = cross_product(C2A, C2P);
+
+    int test_A = (dot_product(A2T, tri.normal) > 0.0f);
+    int test_B = (dot_product(B2T, tri.normal) > 0.0f);
+    int test_C = (dot_product(C2T, tri.normal) > 0.0f);
+    int result = (test_A > 0) && (test_B > 0) && (test_C > 0);
+    return result;
+}
+
+void printVec3(struct Vec3 vector) {
+    printf("%f | %f | %f\n", vector.x, vector.y, vector.z);
 }
