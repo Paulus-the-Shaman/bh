@@ -23,12 +23,14 @@ struct Scene {
 };
 
 
+
 // Functions
 
-void write_render(struct Scene* scn);
-void render(struct Scene* scn);
-void scene_add_tri(struct Scene*, struct Triangle);
+// scene
 struct Scene mk_scene(const char* name, unsigned int width, unsigned int height, const char* file, unsigned int obj_capacity, struct Vec3 bg);
+void scene_add_tri(struct Scene*, struct Triangle);
+void scene_add_obj(struct Scene* scn, struct Object obj);
 
+// camera
 struct Camera mk_camera(struct Vec3 location, struct Vec3 rotation, struct Vec3 direction, int focal_length);
 void camera_write_pixel(struct Scene* scn, int x, int y, struct Vec3 color);
