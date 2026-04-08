@@ -18,7 +18,11 @@ void write_render(struct Scene* scn) {
 }
 
 void scene_add_tri(struct Scene* scn, struct Triangle tri) {
-    scn->objects[scn->obj_num] = tri;
+    struct Object obj;
+    obj.capacity=1;
+    obj.polygon=malloc(sizeof(struct Triangle));
+    obj.polygon[0] = tri;
+    scn->objects[scn->obj_num] = obj;
     scn->obj_num += 1;
 }
 
@@ -30,7 +34,7 @@ struct Scene mk_scene(const char* name, unsigned int width, unsigned int height,
     scn.file    = file;
     scn.obj_cap = obj_capacity;
     scn.obj_num = 0;
-    scn.objects = malloc(sizeof(struct Triangle)*scn.obj_cap);
+    scn.objects = malloc(sizeof(struct Object)*scn.obj_cap);
     if (scn.objects == NULL) {
         printf("[***] Error allocating memory for objects\n[***] Scene: %s\n", scn.name);
         exit(-1);
@@ -58,18 +62,25 @@ void render(struct Scene* scn) {
     struct Vec3 bg = scn->bg;
     for (int y=0;y<scn->height;y++) {
         for (int x=0;x<scn->width;x++) {
-            struct Vec3 color = Vec3(30, 170, 50);
-            camera_write_pixel(scn, x, y, color);
-            struct Vec3 ray = Vec3(norm_float(scn->width, x), (norm_float(scn->width, y)), scn->camera.focal_length);
-            color = Vec3(0, 0, 0);
-            if (tri_ray_collision(scn->objects[0], ray, scn->camera.loc) > 0) {
-                camera_write_pixel(scn, x, y, color);
-            } else {
-                camera_write_pixel(scn, x, y, Vec3(0, x, 0));
+            for (int i=0; i < scn->obj_num; i++){
+                struct Triangle tri = scn->objects[0].polygon[0];
+                struct Vec3 ray = Vec3(
+                    (2.0f * x / (scn->height - 1)) - 1.0f,
+                    (2.0f * y / (scn->height - 1)) - 1.0f,
+                    scn->camera.focal_length
+                );
+    
+                if (tri_ray_collision(tri, ray, scn->camera.loc) > 0) {
+                    camera_write_pixel(scn, x, y, tri.color);
+                } else {
+                    camera_write_pixel(scn, x, y, bg);
+                }
             }
         }
     }
 }
+
+void render_obj();
 
 void camera_write_pixel(struct Scene* scn, int x, int y, struct Vec3 color) {
     int flipped_y = scn->height - 1 - y;

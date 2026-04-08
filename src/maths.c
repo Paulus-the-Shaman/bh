@@ -60,6 +60,26 @@ struct Vec3 Vec3_float_div(struct Vec3 vector, float num) {
     vector.x = vector.x / num; vector.y = vector.y / num; vector.z = vector.z / num; return vector;
 }
 
+struct Vec3 Vec3_rot_x(struct Vec3 vec, struct Vec3 origin, float angle) {
+    struct Vec3 vec_rel = Vec3_sub(vec, origin);
+    vec.y = vec_rel.y*cos(angle) - vec_rel.z*sin(angle);
+    vec.z = vec_rel.y*sin(angle) + vec_rel.z*cos(angle);
+    return vec;
+}
+
+struct Vec3 Vec3_rot_y(struct Vec3 vec, struct Vec3 origin, float angle) {
+    struct Vec3 vec_rel = Vec3_sub(vec, origin);
+    vec.x = vec_rel.x*cos(angle) - vec_rel.z*sin(angle);
+    vec.z = -vec_rel.x*sin(angle) + vec_rel.z*cos(angle);
+    return vec;
+}
+
+struct Vec3 Vec3_rot_z(struct Vec3 vec, struct Vec3 origin, float angle) {
+    struct Vec3 vec_rel = Vec3_sub(vec, origin);
+    vec.x = vec_rel.x*cos(angle) - vec_rel.y*sin(angle);
+    vec.y = vec_rel.x*sin(angle) + vec_rel.y*cos(angle);
+    return vec;
+}
 struct Vec3 cross_product(struct Vec3 vec1, struct Vec3 vec2) {
     struct Vec3 result;
     result.x = (vec1.y*vec2.z)-(vec1.z*vec2.y);
@@ -96,13 +116,41 @@ struct Vec3 normalize(struct Vec3 vector) {
     return vector;
 }
 
-struct Triangle mk_triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c) {
+// This is just to calculate the vector after rotation
+struct Vec3 matrix_mul(struct matrix a, struct Vec3 b) {
+    b.x = (a.a.x*b.x) + (a.a.y*b.y) + (a.a.z*b.z);
+    b.y = (a.b.x*b.x) + (a.b.y*b.y) + (a.b.z*b.z);
+    b.z = (a.c.x*b.x) + (a.c.y*b.y) + (a.c.z*b.z);
+    return b;
+}
+
+struct Triangle mk_triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c, struct Vec3 color) {
     struct Triangle triangle;
     triangle.a = a;
     triangle.b = b;
     triangle.c = c;
     triangle.normal = cross_product(Vec3_sub(b, a), Vec3_sub(c, a));
+    triangle.color = color;
     return triangle;
+}
+
+void tri_rot_x(struct Triangle* tri, float angle) {
+    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    tri->a = Vec3_rot_x(tri->a, mid, angle);
+    tri->b = Vec3_rot_x(tri->b, mid, angle);
+    tri->c = Vec3_rot_x(tri->c, mid, angle);
+}
+void tri_rot_y(struct Triangle* tri, float angle) {
+    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    tri->a = Vec3_rot_y(tri->a, mid, angle);
+    tri->b = Vec3_rot_y(tri->b, mid, angle);
+    tri->c = Vec3_rot_y(tri->c, mid, angle);
+}
+void tri_rot_z(struct Triangle* tri, float angle) {
+    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    tri->a = Vec3_rot_z(tri->a, mid, angle);
+    tri->b = Vec3_rot_z(tri->b, mid, angle);
+    tri->c = Vec3_rot_z(tri->c, mid, angle);
 }
 
 char tri_ray_collision(struct Triangle tri, struct Vec3 ray, struct Vec3 cam_loc) {

@@ -16,6 +16,10 @@ all:
 	./$(TARGET)
 	feh --force-aliasing -FZ ./image.png
 
+debug:
+	$(CC) -g -O0 $(CFLAGS) $(INCS) $(SRCS) $(LIBS) -o $(TARGET)
+	./$(TARGET)
+	feh --force-aliasing -FZ ./image.png
 
 # Clean build artifacts
 clean:

@@ -18,7 +18,7 @@ struct Scene {
     const char *file; //file name to save render at
     int obj_num;
     int obj_cap;
-    struct Triangle* objects;
+    struct Object* objects;
     struct Camera camera; // camera is like its own object in the scene
 };
 
