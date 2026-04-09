@@ -9,7 +9,7 @@ enum BOOL {
 };
 
 struct Collision {
-    unsigned char bool;
+    int Bool;
     float angle;
     float length;
     struct Vec3 loc;
@@ -18,6 +18,6 @@ struct Collision {
 
 
 void render(struct Scene* scn);
-struct Collision render_obj(struct Object* obj, struct Vec3* ray, struct Vec3* cam_loc);
+struct Collision render_obj(struct Object* obj, struct Vec3 ray, struct Vec3 cam_loc);
 
 void write_render(struct Scene* scn);

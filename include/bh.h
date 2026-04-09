@@ -28,7 +28,7 @@ struct Scene {
 
 // scene
 struct Scene mk_scene(const char* name, unsigned int width, unsigned int height, const char* file, unsigned int obj_capacity, struct Vec3 bg);
-void scene_add_tri(struct Scene*, struct Triangle);
+void scene_add_tri(struct Scene*, struct Triangle, struct Vec3 color);
 void scene_add_obj(struct Scene* scn, struct Object obj);
 
 // camera

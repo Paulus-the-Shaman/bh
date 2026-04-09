@@ -37,6 +37,12 @@ struct Vec3 Vec3_sub(struct Vec3 vector1, struct Vec3 vector2) {
     vector1.x = vector1.x - vector2.x; vector1.y = vector1.y - vector2.y; vector1.z = vector1.z - vector2.z; return vector1;
 }
 
+struct Vec3 Vec3_sub_p(struct Vec3* vector1, struct Vec3* vector2) {
+    return Vec3(vector1->x - vector2->x,
+                vector1->y - vector2->y,
+                vector1->z - vector2->z);
+}
+
 struct Vec3 Vec3_mul(struct Vec3 vector1, struct Vec3 vector2) {
     vector1.x = vector2.x * vector1.x; vector1.y = vector2.y * vector1.y; vector1.z = vector2.z * vector1.z; return vector1;
 }
@@ -45,20 +51,29 @@ struct Vec3 Vec3_div(struct Vec3 vector1, struct Vec3 vector2) {
     vector1.x = vector1.x / vector2.x; vector1.y = vector1.y / vector2.y; vector1.z = vector1.z / vector2.z; return vector1;
 }
 
-struct Vec3 Vec3_float_add(struct Vec3 vector, float num) {
+struct Vec3 Vec3_add_f(struct Vec3 vector, float num) {
     vector.x = vector.x + num; vector.y = vector.y + num; vector.z = vector.z + num; return vector;
 }
 
-struct Vec3 Vec3_float_sub(struct Vec3 vector, float num) {
+struct Vec3 Vec3_sub_f(struct Vec3 vector, float num) {
     vector.x = vector.x - num; vector.y = vector.y - num; vector.z = vector.z - num; return vector;
 }
 
-struct Vec3 Vec3_float_mul(struct Vec3 vector, float num) {
+struct Vec3 Vec3_mul_f(struct Vec3 vector, float num) {
     vector.x = vector.x * num; vector.y = vector.y * num; vector.z = vector.z * num; return vector;
 }
 
-struct Vec3 Vec3_float_div(struct Vec3 vector, float num) {
+struct Vec3 Vec3_div_f(struct Vec3 vector, float num) {
     vector.x = vector.x / num; vector.y = vector.y / num; vector.z = vector.z / num; return vector;
+}
+
+float Vec3_angle(struct Vec3 vector1, struct Vec3 vector2) {
+    float result = dot_product(vector1, vector2);
+    result = result / (length(vector1)*length(vector2));
+    if (result > 1.0) result = 1.0;
+    if (result < -1.0) result = -1.0;
+    acos(result);
+    return result;
 }
 
 struct Vec3 Vec3_rot_x(struct Vec3 vec, struct Vec3 origin, float angle) {
@@ -91,13 +106,11 @@ struct Vec3 cross_product(struct Vec3 vec1, struct Vec3 vec2) {
 
 float dot_product(struct Vec3 vec1, struct Vec3 vec2) {
     float val = ((vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z));
-    //printf("-- %f\n", val); //test
     return val;
 }
 
-float dot_product(struct Vec3 vec1, struct Vec3 vec2) {
-    float val = ((vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z));
-    //printf("-- %f\n", val); //test
+float dot_product_p(struct Vec3* vec1, struct Vec3* vec2) {
+    float val = ((vec1->x * vec2->x) + (vec1->y * vec2->y) + (vec1->z * vec2->z));
     return val;
 }
 
@@ -131,61 +144,71 @@ struct Vec3 matrix_mul(struct matrix a, struct Vec3 b) {
     return b;
 }
 
-struct Triangle mk_triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c, struct Vec3 color) {
+struct Triangle Triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c) {
     struct Triangle triangle;
     triangle.a = a;
     triangle.b = b;
     triangle.c = c;
     triangle.normal = cross_product(Vec3_sub(b, a), Vec3_sub(c, a));
-    triangle.color = color;
     return triangle;
 }
 
 void tri_rot_x(struct Triangle* tri, float angle) {
-    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    struct Vec3 mid = Vec3_div_f(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
     tri->a = Vec3_rot_x(tri->a, mid, angle);
     tri->b = Vec3_rot_x(tri->b, mid, angle);
     tri->c = Vec3_rot_x(tri->c, mid, angle);
 }
 void tri_rot_y(struct Triangle* tri, float angle) {
-    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    struct Vec3 mid = Vec3_div_f(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
     tri->a = Vec3_rot_y(tri->a, mid, angle);
     tri->b = Vec3_rot_y(tri->b, mid, angle);
     tri->c = Vec3_rot_y(tri->c, mid, angle);
 }
 void tri_rot_z(struct Triangle* tri, float angle) {
-    struct Vec3 mid = Vec3_float_div(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
+    struct Vec3 mid = Vec3_div_f(Vec3_add(Vec3_add(tri->a, tri->b), tri->c), 3.0);
     tri->a = Vec3_rot_z(tri->a, mid, angle);
     tri->b = Vec3_rot_z(tri->b, mid, angle);
     tri->c = Vec3_rot_z(tri->c, mid, angle);
 }
 
-struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3* ray, struct Vec3* cam_loc) {
-    float n_dot_t = dot_product(tri->normal, ray);
-    if (zero(n_dot_t)) {
-        return 0;
-    }
-    float n_dot_ps = dot_product(tri.normal, Vec3_sub(tri.a, cam_loc));
-    float t = n_dot_ps / n_dot_t;
-    struct Vec3 planePoint = Vec3_add(cam_loc, Vec3_float_mul(ray, t));
-    
-    struct Vec3 A2B = Vec3_sub(tri.b, tri.a);
-    struct Vec3 B2C = Vec3_sub(tri.c, tri.b);
-    struct Vec3 C2A = Vec3_sub(tri.a, tri.c);
+struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3 ray, struct Vec3 cam_loc, struct Vec3 color) {
+    struct Collision col;
+    col.Bool = 0;
+    float n_dot_t = dot_product_p(&tri->normal, &ray);
+    if (zero(n_dot_t)) return col;
 
-    struct Vec3 A2P = Vec3_sub(planePoint, tri.a);
-    struct Vec3 B2P = Vec3_sub(planePoint, tri.b);
-    struct Vec3 C2P = Vec3_sub(planePoint, tri.c);
+    float n_dot_ps = dot_product(tri->normal, Vec3_sub(tri->a, cam_loc));
+    float t = n_dot_ps / n_dot_t;
+    struct Vec3 planePoint = Vec3_add(cam_loc, Vec3_mul_f(ray, t));
+    
+    struct Vec3 A2B = Vec3_sub_p(&tri->b, &tri->a);
+    struct Vec3 B2C = Vec3_sub_p(&tri->c, &tri->b);
+    struct Vec3 C2A = Vec3_sub_p(&tri->a, &tri->c);
+
+    struct Vec3 A2P = Vec3_sub_p(&planePoint, &tri->a);
+    struct Vec3 B2P = Vec3_sub_p(&planePoint, &tri->b);
+    struct Vec3 C2P = Vec3_sub_p(&planePoint, &tri->c);
     
     struct Vec3 A2T = cross_product(A2B, A2P);
     struct Vec3 B2T = cross_product(B2C, B2P);
     struct Vec3 C2T = cross_product(C2A, C2P);
 
-    int test_A = (dot_product(A2T, tri.normal) > 0.0f);
-    int test_B = (dot_product(B2T, tri.normal) > 0.0f);
-    int test_C = (dot_product(C2T, tri.normal) > 0.0f);
-    int result = (test_A > 0) && (test_B > 0) && (test_C > 0);
-    return result;
+    int test_A = dot_product(A2T, tri->normal) > 0.0f;
+    int test_B = dot_product(B2T, tri->normal) > 0.0f;
+    int test_C = dot_product(C2T, tri->normal) > 0.0f;
+
+    if ((test_A > 0) && (test_B > 0) && (test_C > 0)) {
+        col.Bool = 1;
+        col.length = t;
+        col.loc = planePoint;
+        col.angle = Vec3_angle(planePoint, tri->normal);
+        col.color = color;
+        //col.color = Vec3_mul_f(color, col.angle);
+        return col;
+    } else {
+        return col;
+    }
 }
 
 void printVec3(struct Vec3 vector) {

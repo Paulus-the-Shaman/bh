@@ -7,7 +7,7 @@
 
 
 
-void scene_add_tri(struct Scene* scn, struct Triangle tri) {
+void scene_add_tri(struct Scene* scn, struct Triangle tri, struct Vec3 color) {
     if (scn->obj_num == scn->obj_cap) {
         printf("[***] Too many objects in Scene: %s\n", scn->name);
     }
@@ -15,6 +15,7 @@ void scene_add_tri(struct Scene* scn, struct Triangle tri) {
     obj.capacity=1;
     obj.polygon=malloc(sizeof(struct Triangle));
     obj.polygon[0] = tri;
+    obj.color = color;
     scn->objects[scn->obj_num] = obj;
     scn->obj_num += 1;
 }
