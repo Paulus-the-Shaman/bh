@@ -1,7 +1,6 @@
 #pragma once
 
 
-
 struct Vec3 {
     float x, y, z;
 };
@@ -55,6 +54,6 @@ struct Triangle mk_triangle(struct Vec3 a, struct Vec3 b, struct Vec3 c, struct 
 void tri_rot_x(struct Triangle* tri, float angle);
 void tri_rot_y(struct Triangle* tri, float angle);
 void tri_rot_z(struct Triangle* tri, float angle);
-char tri_ray_collision(struct Triangle tri, struct Vec3 ray, struct Vec3 cam_loc);
+struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3* ray, struct Vec3* cam_loc);
 
 void printVec3(struct Vec3 vector);

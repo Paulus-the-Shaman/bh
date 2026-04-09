@@ -3,14 +3,21 @@
 #include "maths.h"
 
 
+enum BOOL {
+    FALSE,
+    TRUE
+};
+
 struct Collision {
+    unsigned char bool;
     float angle;
     float length;
     struct Vec3 loc;
+    struct Vec3 color;
 };
 
 
 void render(struct Scene* scn);
-void render_obj();
+struct Collision render_obj(struct Object* obj, struct Vec3* ray, struct Vec3* cam_loc);
 
 void write_render(struct Scene* scn);

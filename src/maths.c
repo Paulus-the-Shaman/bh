@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <threads.h>
 #include "maths.h"
+#include "render.h"
 
 
 
@@ -94,6 +95,12 @@ float dot_product(struct Vec3 vec1, struct Vec3 vec2) {
     return val;
 }
 
+float dot_product(struct Vec3 vec1, struct Vec3 vec2) {
+    float val = ((vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z));
+    //printf("-- %f\n", val); //test
+    return val;
+}
+
 float length(struct Vec3 vector) {
     return sqrtf(sqr(vector.x) + sqr(vector.y) + sqr(vector.z));
 }
@@ -153,8 +160,8 @@ void tri_rot_z(struct Triangle* tri, float angle) {
     tri->c = Vec3_rot_z(tri->c, mid, angle);
 }
 
-char tri_ray_collision(struct Triangle tri, struct Vec3 ray, struct Vec3 cam_loc) {
-    float n_dot_t = dot_product(tri.normal, ray);
+struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3* ray, struct Vec3* cam_loc) {
+    float n_dot_t = dot_product(tri->normal, ray);
     if (zero(n_dot_t)) {
         return 0;
     }
