@@ -1,9 +1,10 @@
 #include <stdio.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include "bh.h"
 #include "maths.h"
 #include "render.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
 void render(struct Scene* scn) {
     struct Vec3 bg = scn->bg;
@@ -19,10 +20,11 @@ void render(struct Scene* scn) {
 
             // looping through all objects with ray
             struct Collision collision;
+            struct Collision new_col;
             if (scn->obj_num > 0) collision = render_obj(&scn->objects[0], ray, scn->camera.loc);
             if (scn->obj_num > 1) {
                 for (int i=1; i < scn->obj_num; i++) {
-                    struct Collision new_col = render_obj(&scn->objects[i], ray, scn->camera.loc);
+                    new_col = render_obj(&scn->objects[i], ray, scn->camera.loc);
                     if (!(collision.Bool) && (new_col.Bool)) {collision = new_col;}
                     else if ((new_col.length < collision.length)) {
                         collision = new_col;
@@ -43,12 +45,15 @@ struct Collision render_obj(struct Object* obj, struct Vec3 ray, struct Vec3 cam
     struct Collision col;
     struct Collision new_col;
     col.Bool = 0;
-    if (obj->capacity >  0) col = tri_ray_collision(&obj->polygon[0], ray, cam_loc, obj->color);
-    if (obj->capacity == 1) {}
-    else {
+    if (obj->capacity > 0) col = tri_ray_collision(&obj->polygon[0], ray, cam_loc, obj->color);
+    if (obj->capacity > 1) {
         for (int i=1; i<obj->capacity; i++) {
             new_col = tri_ray_collision(&obj->polygon[i], ray, cam_loc, obj->color);
             if ((new_col.length < col.length) && (col.Bool)) new_col = col;
+            if (!(col.Bool) && (new_col.Bool)) {col = new_col;}
+            else if ((new_col.length < col.length)) {
+                col = new_col;
+            }
         }
     }
     return col;

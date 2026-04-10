@@ -2,6 +2,12 @@
 
 #define PI 3.14159265358979323846
 
+enum AXIS {
+    X,
+    Y,
+    Z
+};
+
 struct Vec3 {
     float x, y, z;
 };
@@ -25,9 +31,17 @@ struct Object {
     struct Triangle* polygon;
 };
 
+struct Collision {
+    int Bool;
+    float angle;
+    float length;
+    struct Vec3 loc;
+    struct Vec3 color;
+};
 // Functions
 
 float sqr(float);
+float rad(float angle);
 char zero(float);
 float norm_float(float max, float value);
 struct Vec3 Vec3(float, float, float);
@@ -58,5 +72,8 @@ void tri_rot_z(struct Triangle* tri, float angle);
 struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3 ray, struct Vec3 cam_loc, struct Vec3 color);
 
 struct Object Object(int capacity, struct Vec3 color, struct Triangle* polygons);
+void Obj_rotate(struct Object* obj, enum AXIS, float angle);
 
 void printVec3(struct Vec3 vector);
+
+void print(const char*);

@@ -1,13 +1,16 @@
 #include <math.h>
 #include <stdio.h>
-#include <threads.h>
+
 #include "maths.h"
-#include "render.h"
 
 
 
 float sqr(float num) {
     return num * num;
+}
+
+float rad(float angle) {
+    return (angle * (PI/180.0));
 }
 
 char zero(float num) {
@@ -72,30 +75,38 @@ float Vec3_angle(struct Vec3 vector1, struct Vec3 vector2) {
     result = result / (length(vector1)*length(vector2));
     if (result > 1.0) result = 1.0;
     if (result < -1.0) result = -1.0;
-    acos(result);
+    result = acos(result);
+    result = result / PI;
     return result;
 }
 
 struct Vec3 Vec3_rot_x(struct Vec3 vec, struct Vec3 origin, float angle) {
-    struct Vec3 vec_rel = Vec3_sub(vec, origin);
-    vec.y = vec_rel.y*cos(angle) - vec_rel.z*sin(angle);
-    vec.z = vec_rel.y*sin(angle) + vec_rel.z*cos(angle);
-    return vec;
+    struct Vec3 result;
+    struct Vec3 vec_rel = Vec3_sub_p(&vec, &origin);
+    result.y = vec_rel.y*cos(angle) - vec_rel.z*sin(angle) + origin.y;
+    result.z = vec_rel.y*sin(angle) + vec_rel.z*cos(angle) + origin.z;
+    result.x = vec_rel.x + origin.x;
+    return result;
 }
 
 struct Vec3 Vec3_rot_y(struct Vec3 vec, struct Vec3 origin, float angle) {
-    struct Vec3 vec_rel = Vec3_sub(vec, origin);
-    vec.x = vec_rel.x*cos(angle) - vec_rel.z*sin(angle);
-    vec.z = -vec_rel.x*sin(angle) + vec_rel.z*cos(angle);
-    return vec;
+    struct Vec3 result;
+    struct Vec3 vec_rel = Vec3_sub_p(&vec, &origin);
+    result.x = vec_rel.x*cos(angle) - vec_rel.z*sin(angle)  + origin.x;
+    result.z = -vec_rel.x*sin(angle) + vec_rel.z*cos(angle) + origin.z;
+    result.y = vec_rel.y + origin.y;
+    return result;
 }
 
 struct Vec3 Vec3_rot_z(struct Vec3 vec, struct Vec3 origin, float angle) {
-    struct Vec3 vec_rel = Vec3_sub(vec, origin);
-    vec.x = vec_rel.x*cos(angle) - vec_rel.y*sin(angle);
-    vec.y = vec_rel.x*sin(angle) + vec_rel.y*cos(angle);
-    return vec;
+    struct Vec3 result;
+    struct Vec3 vec_rel = Vec3_sub_p(&vec, &origin);
+    result.x = vec_rel.x*cos(angle) - vec_rel.y*sin(angle) + origin.x;
+    result.y = vec_rel.x*sin(angle) + vec_rel.y*cos(angle) + origin.y;
+    result.z = vec_rel.z + origin.z;
+    return result;
 }
+
 struct Vec3 cross_product(struct Vec3 vec1, struct Vec3 vec2) {
     struct Vec3 result;
     result.x = (vec1.y*vec2.z)-(vec1.z*vec2.y);
@@ -204,13 +215,53 @@ struct Collision tri_ray_collision(struct Triangle* tri, struct Vec3 ray, struct
         col.loc = planePoint;
         col.angle = Vec3_angle(planePoint, tri->normal);
         col.color = color;
-        //col.color = Vec3_mul_f(color, col.angle);
+        //col.color = Vec3_mul_f(color, col.angle*2);
         return col;
     } else {
         return col;
     }
 }
 
+struct Object Object(int capacity, struct Vec3 color, struct Triangle* polygons) {
+    struct Object obj;
+    obj.capacity = capacity;
+    obj.color    = color;
+    obj.polygon  = polygons;
+    return obj;
+}
+
+void Obj_translate(struct Object* obj);
+
+void Obj_rotate(struct Object* obj, enum AXIS axis, float angle) {
+    struct Vec3 mid = Vec3(0,.5,5.5);
+    if (axis == X) {
+        for (int i=0; i<obj->capacity;i++) {
+            obj->polygon[i].a = Vec3_rot_x(obj->polygon[i].a, mid, angle);
+            obj->polygon[i].b = Vec3_rot_x(obj->polygon[i].b, mid, angle);
+            obj->polygon[i].c = Vec3_rot_x(obj->polygon[i].c, mid, angle);
+            obj->polygon[i].normal = normalize(cross_product(Vec3_sub(obj->polygon[i].b, obj->polygon[i].a), Vec3_sub(obj->polygon[i].c, obj->polygon[i].a)));
+        }
+    }
+    if (axis == Y) {
+        for (int i=0; i<obj->capacity;i++) {
+            obj->polygon[i].a = Vec3_rot_y(obj->polygon[i].a, mid, angle);
+            obj->polygon[i].b = Vec3_rot_y(obj->polygon[i].b, mid, angle);
+            obj->polygon[i].c = Vec3_rot_y(obj->polygon[i].c, mid, angle);
+            obj->polygon[i].normal = normalize(cross_product(Vec3_sub(obj->polygon[i].b, obj->polygon[i].a), Vec3_sub(obj->polygon[i].c, obj->polygon[i].a)));
+        }
+    }
+    if (axis == Z) {
+        for (int i=0; i<obj->capacity;i++) {
+            obj->polygon[i].a = Vec3_rot_z(obj->polygon[i].a, mid, angle);
+            obj->polygon[i].b = Vec3_rot_z(obj->polygon[i].b, mid, angle);
+            obj->polygon[i].c = Vec3_rot_z(obj->polygon[i].c, mid, angle);
+            obj->polygon[i].normal = normalize(cross_product(Vec3_sub(obj->polygon[i].b, obj->polygon[i].a), Vec3_sub(obj->polygon[i].c, obj->polygon[i].a)));
+        }
+    }
+}
+
 void printVec3(struct Vec3 vector) {
     printf("%f | %f | %f\n", vector.x, vector.y, vector.z);
 }
+
+void print(const char* str) {printf("%s\n", str);}

@@ -1,5 +1,5 @@
 # BH
-![image showing render made using this program](./image1.png)
+![image showing render made using this program](./eg.png)
 
 ## Introduction
 Raytracer that generates png images.

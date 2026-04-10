@@ -8,13 +8,6 @@ enum BOOL {
     TRUE
 };
 
-struct Collision {
-    int Bool;
-    float angle;
-    float length;
-    struct Vec3 loc;
-    struct Vec3 color;
-};
 
 
 void render(struct Scene* scn);
